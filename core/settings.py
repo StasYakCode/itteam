@@ -36,12 +36,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0@1aa+gzt2%+x$v5lgz20w=@gag$5v#ye2*v!yh$r*zi2z2aj+'
+# (already loaded from environment above)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG is driven by environment variable
 
-ALLOWED_HOSTS = []
+# Allow all hosts publicly
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

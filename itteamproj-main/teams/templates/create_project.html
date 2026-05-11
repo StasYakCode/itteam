@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DevSquad Connect - Створити Проєкт{% endblock %}
+{% block header_title %}Створити Проєкт{% endblock %}
+
+{% block content %}
+<style>
+    .form-input {
+        width: 100%;
+        padding: 0.85rem 1.25rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.75rem;
+        color: #ffffff;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(0, 112, 243, 0.5);
+        box-shadow: 0 0 15px rgba(0, 112, 243, 0.15);
+    }
+
+    .form-input::placeholder {
+        color: #6b7280;
+    }
+
+    .glass-panel {
+        background: rgba(17, 17, 17, 0.6);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7);
+    }
+</style>
+
+<div class="max-w-4xl mx-auto pb-12">
+    <div class="mb-8 stagger-item stagger-1">
+        <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Розкажіть про вашу ідею</h1>
+        <p class="text-gray-400 text-sm">Чим детальніше ви опишете проєкт, тим швидше ми підберемо для вас ідеальну
+            команду розробників.</p>
+    </div>
+
+    <form action="{% url 'create_project' %}" method="POST"
+        class="glass-panel rounded-3xl p-8 md:p-10 stagger-item stagger-2 relative overflow-hidden">
+
+        {% csrf_token %}
+
+        <div class="absolute -top-20 -right-20 w-48 h-48 bg-accent-blue/10 rounded-full blur-3xl pointer-events-none">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+            <div class="space-y-6">
+                <div>
+                    <label class="text-sm font-medium text-gray-400 mb-2 block ml-1">Назва проєкту</label>
+                    <input type="text" name="title" class="form-input"
+                        placeholder="напр. Розробка SaaS платформи для логістики" required>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-400 mb-2 block ml-1">Бажаний стек технологій</label>
+                    <input type="text" name="stack" class="form-input"
+                        placeholder="Python, Django, React, PostgreSQL...">
+                    <p class="text-xs text-gray-500 mt-2 ml-1">Перелічіть технології через кому, якщо знаєте.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-400 mb-2 block ml-1">Бюджет ($)</label>
+                        <input type="number" name="budget" step="0.01" class="form-input" placeholder="3000 - 5000">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-400 mb-2 block ml-1">Дедлайн</label>
+                        <input type="date" name="deadline"
+                            class="form-input text-gray-400 [&::-webkit-calendar-picker-indicator]:filter-[invert(1)]">
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6 flex flex-col">
+                <div class="flex-1 flex flex-col">
+                    <label class="text-sm font-medium text-gray-400 mb-2 block ml-1">Детальний опис</label>
+                    <textarea name="description" class="form-input flex-1 resize-none min-h-[150px]"
+                        placeholder="Опишіть бізнес-логіку, основні фічі та вимоги до команди... Зробіть це так, щоб розробники захотіли взятися за ваш код!"
+                        required></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10 pt-8 border-t border-white/5 flex items-center justify-between relative z-10">
+            <p class="text-xs text-gray-500">Ваш проєкт буде перевірено модератором перед публікацією.</p>
+            <button type="submit"
+                class="bg-accent-blue hover:bg-accent-blue/80 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(0,112,243,0.3)] hover:shadow-[0_0_25px_rgba(0,112,243,0.5)] hover:-translate-y-0.5">
+                Опублікувати Проєкт
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

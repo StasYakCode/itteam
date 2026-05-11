@@ -1,0 +1,402 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk" class="dark" style="scroll-behavior: smooth;">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DevSquad Connect - Де ідеї стають кодом{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        blackbg: '#0a0a0a',
+                        surface: '#161616',
+                        accent: {
+                            blue: '#0070f3',
+                            cyan: '#00f0ff'
+                        }
+                    },
+                    boxShadow: {
+                        'neon': '0 0 15px rgba(0, 112, 243, 0.5)',
+                        'neon-cyan': '0 0 15px rgba(0, 240, 255, 0.5)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --surface-color: rgba(22, 22, 22, 0.65);
+            --accent-blue: #0070f3;
+            --accent-blue-glow: rgba(0, 112, 243, 0.4);
+            --accent-cyan: #00f0ff;
+            --accent-cyan-glow: rgba(0, 240, 255, 0.4);
+        }
+
+        .glass-card {
+            background: var(--surface-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px) scale(1);
+            }
+
+            50% {
+                transform: translateY(-10px) scale(1.02);
+            }
+
+            100% {
+                transform: translateY(0px) scale(1);
+            }
+        }
+
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes shine {
+            from {
+                transform: translateX(-100%) skewX(-15deg);
+            }
+
+            to {
+                transform: translateX(200%) skewX(-15deg);
+            }
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stagger-item {
+            opacity: 0;
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .stagger-1 {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-2 {
+            animation-delay: 0.2s;
+        }
+
+        .stagger-3 {
+            animation-delay: 0.3s;
+        }
+
+        .stagger-4 {
+            animation-delay: 0.4s;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+
+        .neon-grid {
+            background-image:
+                linear-gradient(rgba(0, 112, 243, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 112, 243, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            perspective: 1000px;
+        }
+
+        .neon-grid::before {
+            content: '';
+            absolute: inset 0;
+            background:
+                linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+            background-size: 100px 100px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 0 100%;
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-blackbg text-gray-200 font-sans antialiased overflow-x-hidden min-h-screen relative scrollbar-custom page-fade-in">
+
+    <div class="absolute -top-48 -left-48 w-96 h-96 bg-accent-blue/10 rounded-full blur-[120px] pointer-events-none floating-element"
+        style="animation-delay: 1s"></div>
+    <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent-cyan/10 rounded-full blur-[120px] pointer-events-none floating-element">
+    </div>
+
+    <header
+        class="h-20 border-b border-white/5 bg-surface/80 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-8 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-cyan flex justify-center items-center font-bold text-xl text-white shadow-neon">
+                DS
+            </div>
+            <span class="font-extrabold text-2xl tracking-tight text-white">DevSquad<span
+                    class="text-accent-blue">Connect</span></span>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+
+
+            <a href="#for-clients" class="hover:text-accent-cyan transition-colors">ДЛЯ ЗАМОВНИКІВ</a>
+            <a href="#for-teams" class="hover:text-accent-cyan transition-colors">ДЛЯ КОМАНД</a>
+            <a href="#how-it-works" class="hover:text-accent-cyan transition-colors">ЯК ЦЕ ПРАЦЮЄ</a>
+        </nav>
+
+        <div class="flex items-center gap-3">
+            <a href="{% url 'auth' %}"
+                class="bg-white/5 hover:bg-accent-blue/20 text-accent-blue border border-accent-blue/30 px-6 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-neon group overflow-hidden relative">
+                <span class="relative z-10">УВІЙТИ</span>
+                <div class="absolute inset-0 bg-white/20 w-1/2 animate-[shine_2s_infinite]"></div>
+            </a>
+            <a href="{% url 'auth' %}"
+                class="bg-accent-cyan hover:bg-accent-cyan/80 text-black border border-accent-cyan/50 hover:border-accent-cyan hover:shadow-neon-cyan px-6 py-2.5 rounded-xl text-sm font-bold transition-colors">
+                РЕЄСТРАЦІЯ
+            </a>
+        </div>
+    </header>
+
+    <section class="min-h-[80vh] flex items-center justify-center text-center relative overflow-hidden neon-grid">
+        <div class="absolute top-1/4 left-10 p-4 rounded-xl glass-card border-accent-blue/20 floating-element text-shadow-neon font-mono text-xs text-accent-cyan"
+            style="animation-delay: 2s">
+            <p>> 🚀 connecting talent...</p>
+            <p>> query teams WHERE stack = 'Django'</p>
+        </div>
+        <div class="absolute bottom-1/4 right-10 p-4 rounded-xl glass-card border-accent-blue/20 floating-element text-shadow-neon font-mono text-xs text-accent-cyan"
+            style="animation-delay: 0.5s">
+            <p>> project = 'Fintech App'</p>
+            <p>> hire(NexusAlpha)</p>
+        </div>
+
+        <div class="relative z-10 w-full max-w-5xl px-6 stagger-item stagger-1">
+            <h1 class="text-6xl md:text-7xl font-extrabold text-white mb-6 leading-tight tracking-tighter">
+                Ваша наступна <span class="text-accent-blue">супер-команда</span><br> вже тут.
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12">DevSquad Connect — це елітна біржа, де
+                замовники знаходять перевірені ІТ команди, а розробники отримують проекти своєї мрії.</p>
+
+            <div class="flex items-center justify-center gap-5">
+                <a href="{% url 'auth' %}"
+                    class="bg-accent-blue hover:bg-accent-blue/80 text-white border border-accent-blue/50 hover:border-accent-blue hover:shadow-neon px-10 py-4 rounded-xl text-lg font-bold transition-colors group overflow-hidden relative">
+                    <span class="relative z-10">ЗНАЙТИ КОМАНДУ</span>
+                    <div class="absolute inset-0 bg-white/20 w-1/2 animate-[shine_2s_infinite]"></div>
+                </a>
+                <a href="{% url 'auth' %}"
+                    class="bg-surface hover:bg-white/10 text-white border border-white/10 px-10 py-4 rounded-xl text-lg font-medium transition-colors">
+                    СТАТИ ВИКОНАВЦЕМ →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="for-clients" class="py-24 px-8 relative stagger-item stagger-2">
+        <div class="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
+            <div class="flex-1 space-y-6">
+                <h2 class="text-4xl font-extrabold text-white leading-tight">ЗНАЙДІТЬ ІДЕАЛЬНУ КОМАНДУ</h2>
+                <p class="text-gray-400 text-lg">Переглядайте перевірені ІТ команди, кожна з яких має унікальний набір
+                    навичок і досвід, готовий втілити ваш проєкт у реальність.</p>
+                <div class="flex items-center gap-1 pt-3">
+                    <svg class="w-6 h-6 text-accent-cyan" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm text-accent-cyan font-bold tracking-wider">ПЕРЕВІРЕНІ ТАЛАНТИ</span>
+                </div>
+            </div>
+
+            <div class="flex-1 relative">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-accent-cyan/10 rounded-full blur-3xl pointer-events-none floating-element"
+                    style="animation-delay: 1.5s"></div>
+
+                <div class="glass-card rounded-3xl p-8 relative overflow-hidden group border border-accent-cyan/20">
+                    <div class="flex items-start justify-between mb-4 relative z-10">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-black border border-accent-cyan/10 flex items-center justify-center font-bold text-lg text-accent-cyan shadow-neon-cyan">
+                                Nx
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-xl text-white">Nexus Alpha</h3>
+                                <p class="text-xs text-accent-cyan font-bold tracking-wider">Sr. Backend Specialists</p>
+                            </div>
+                        </div>
+                        <span
+                            class="flex items-center gap-1 text-yellow-400 font-mono text-sm px-2 py-1 bg-white/5 rounded-md border border-white/5">★
+                            4.9</span>
+                    </div>
+
+                    <p class="text-gray-400 text-sm mb-6 mt-4 relative z-10">Архітектура високонавантажених систем.
+                        Спеціалізація на масштабуванні мікросервісів для фінтех проєктів.</p>
+
+                    <div class="flex-wrap gap-2 mb-6 relative z-10">
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">Django</span>
+                        <span
+                            class="skill-tag border-accent-cyan/40 text-accent-cyan shadow-[0_0_5px_rgba(0,240,255,0.2)]">Golang</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="for-teams" class="py-24 px-8 relative stagger-item stagger-3">
+        <div class="w-full max-w-7xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
+            <div class="flex-1 space-y-6">
+                <h2 class="text-4xl font-extrabold text-white leading-tight">ЗНАЙДІТЬ НАСТУПНИЙ ПРОЄКТ</h2>
+                <p class="text-gray-400 text-lg">Фокусуйтесь на написанні чистого коду, а не на пошуках замовників.
+                    Отримуйте прямий доступ до амбітних стартапів та ентерпрайзів, які шукають команди саме з вашим
+                    стеком технологій.</p>
+                <div class="flex items-center gap-1 pt-3">
+                    <svg class="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                    </svg>
+                    <span class="text-sm text-accent-blue font-bold tracking-wider">ФОКУС НА КОДІ</span>
+                </div>
+            </div>
+
+            <div class="flex-1 relative">
+                <div
+                    class="absolute -top-12 -left-12 w-32 h-32 bg-accent-blue/10 rounded-full blur-3xl pointer-events-none floating-element">
+                </div>
+
+                <div class="glass-card rounded-3xl p-8 relative overflow-hidden group border border-accent-blue/20">
+                    <div class="flex items-start justify-between mb-4 relative z-10">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-surface border border-white/5 flex items-center justify-center text-accent-blue">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-xl text-white group-hover:text-accent-blue transition-colors">
+                                    Розробка SaaS Платформи</h3>
+                                <p class="text-xs text-gray-400">Клієнт: FinTech Startup</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-gray-400 text-sm mb-6 mt-4 relative z-10">Необхідна команда для створення
+                        масштабованої фінтех платформи з підтримкою real-time транзакцій.</p>
+
+                    <div class="flex-wrap gap-2 mb-6 relative z-10">
+                        <span class="skill-tag">Django Rest</span>
+                        <span
+                            class="skill-tag border-accent-cyan/40 text-accent-cyan shadow-[0_0_5px_rgba(0,240,255,0.2)]">PostgreSQL</span>
+                        <span
+                            class="skill-tag border-accent-blue/40 text-accent-blue shadow-[0_0_5px_rgba(0,112,243,0.2)]">Microservices</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="py-24 px-8 relative stagger-item stagger-4">
+        <div class="w-full max-w-7xl mx-auto text-center mb-16">
+            <h2 class="text-4xl font-extrabold text-white leading-tight">ЯК ЦЕ ПРАЦЮЄ</h2>
+            <p class="text-gray-400 text-lg max-w-2xl mx-auto mt-4">Простий та ефективний процес від ідеї до реалізації.
+            </p>
+        </div>
+
+        <div class="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
+            <div
+                class="glass-card rounded-2xl p-10 space-y-4 border-white/5 hover:border-accent-cyan/20 transition-all duration-300">
+                <div
+                    class="w-16 h-16 mx-auto rounded-full bg-accent-blue/10 flex items-center justify-center font-bold text-2xl text-accent-blue shadow-neon">
+                    1</div>
+                <h3 class="text-xl font-bold text-white">СТВОРІТЬ ПРОФІЛЬ</h3>
+                <p class="text-gray-400 text-sm">Команда: опишіть стек та портфоліо.<br>Замовник: опишіть свій проєкт.
+                </p>
+            </div>
+            <div
+                class="glass-card rounded-2xl p-10 space-y-4 border-white/5 hover:border-accent-blue/20 transition-all duration-300">
+                <div
+                    class="w-16 h-16 mx-auto rounded-full bg-accent-cyan/10 flex items-center justify-center font-bold text-2xl text-accent-cyan shadow-neon-cyan">
+                    2</div>
+                <h3 class="text-xl font-bold text-white">ЗНАЙДІТЬ ПАРТНЕРА</h3>
+                <p class="text-gray-400 text-sm">Використовуйте фільтри та перевірені профілі для пошуку ідеального
+                    матчу.</p>
+            </div>
+            <div
+                class="glass-card rounded-2xl p-10 space-y-4 border-white/5 hover:border-accent-cyan/20 transition-all duration-300">
+                <div
+                    class="w-16 h-16 mx-auto rounded-full bg-accent-blue/10 flex items-center justify-center font-bold text-2xl text-accent-blue shadow-neon">
+                    3</div>
+                <h3 class="text-xl font-bold text-white">РОЗПОЧНІТЬ ПРОЕКТ</h3>
+                <p class="text-gray-400 text-sm">Комунікуйте через вбудований real-time чат та реалізуйте свій задум.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-white/5 bg-surface/80 backdrop-blur-md py-10 px-8">
+        <div
+            class="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-gray-500">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-cyan flex justify-center items-center font-bold text-lg text-white shadow-neon">
+                    DS</div>
+                <span>DevSquad Connect © 2026</span>
+            </div>
+            <nav class="flex items-center gap-6">
+                <a href="#" class="hover:text-accent-cyan transition-colors">Політика конфіденційності</a>
+                <a href="#" class="hover:text-accent-cyan transition-colors">Умови використання</a>
+                <a href="#" class="hover:text-accent-cyan transition-colors">Підтримка</a>
+            </nav>
+        </div>
+    </footer>
+
+</body>
+
+</html>

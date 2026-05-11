@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DevSquad Connect - Налаштування{% endblock %}
+{% block header_title %}Налаштування Профілю{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card { background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
+    .form-input { width: 100%; padding: 0.85rem 1.25rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.75rem; color: #ffffff; font-size: 0.9rem; transition: all 0.3s ease; }
+    .form-input:focus { outline: none; background: rgba(255, 255, 255, 0.06); }
+    .toggle-checkbox { right: 0; z-index: 1; border-color: #374151; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .toggle-label { background-color: #374151; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .toggle-checkbox:checked { right: 0; }
+    .theme-client .form-input:focus { border-color: rgba(0, 112, 243, 0.5); box-shadow: 0 0 15px rgba(0, 112, 243, 0.15); }
+    .theme-client .toggle-checkbox:checked { border-color: #0070f3; }
+    .theme-client .toggle-checkbox:checked+.toggle-label { background-color: #0070f3; box-shadow: 0 0 10px rgba(0, 112, 243, 0.4); }
+    .theme-developer .form-input:focus { border-color: rgba(0, 240, 255, 0.5); box-shadow: 0 0 15px rgba(0, 240, 255, 0.15); }
+    .theme-developer .toggle-checkbox:checked { border-color: #00f0ff; }
+    .theme-developer .toggle-checkbox:checked+.toggle-label { background-color: #00f0ff; box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+</style>
+
+<div class="max-w-4xl mx-auto pb-12 {% if user.role == 'client' %}theme-client{% else %}theme-developer{% endif %}">
+    
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-500/10 text-red-400 border border-red-500/20{% else %}bg-green-500/10 text-green-400 border border-green-500/20{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="mb-8 stagger-item stagger-1">
+        <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Налаштування аккаунту</h1>
+        <p class="text-gray-400 text-sm">Керуйте своїми персональними даними, безпекою та сповіщеннями в системі.</p>
+    </div>
+
+    <form action="{% url 'settings' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="delete_avatar" id="delete-avatar-input" value="false">
+
+        <div class="glass-card rounded-3xl p-8 mb-8 relative overflow-hidden stagger-item stagger-2 border border-white/5">
+            <div class="absolute top-0 left-0 w-2 h-full {% if user.role == 'client' %}bg-accent-blue shadow-[0_0_15px_rgba(0,112,243,0.5)]{% else %}bg-accent-cyan shadow-[0_0_15px_rgba(0,240,255,0.5)]{% endif %}"></div>
+
+            <h3 class="text-xl font-bold text-white mb-8 border-b border-white/5 pb-4 flex items-center gap-3 pl-4">
+                <svg class="w-5 h-5 {% if user.role == 'client' %}text-accent-blue{% else %}text-accent-cyan{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Особисті дані
+            </h3>
+
+            <div class="pl-4 flex flex-col md:flex-row gap-10">
+                
+                <div class="flex flex-col items-center gap-4">
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
+                        <img id="avatar-preview" class="w-28 h-28 rounded-2xl object-cover shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 group-hover:opacity-50 transition-opacity"
+                            src="{% if profile.avatar %}{{ profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.display_name|urlencode }}&background=111&color=fff&bold=true{% endif %}" alt="Avatar">
+                        
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-8 h-8 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        
+                        <input type="file" name="avatar" id="avatar-upload" accept="image/*" class="hidden" onchange="previewImage(event)">
+                    </div>
+                    
+                    {% if profile.avatar %}
+                    <button type="button" onclick="deleteAvatar()" class="text-xs font-bold text-red-500 hover:text-red-400 transition-colors">ВИДАЛИТИ ФОТО</button>
+                    {% else %}
+                    <p class="text-xs font-bold text-gray-500">Натисніть, щоб змінити</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex-1 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-sm font-medium text-gray-400 mb-2 block">Повне Ім'я або Назва</label>
+                            <input type="text" name="display_name" class="form-input" value="{{ user.display_name|default:user.username }}" required>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-400 mb-2 block">Email адреса</label>
+                            <input type="email" class="form-input text-gray-400 bg-white/5" value="{{ user.email }}" disabled>
+                            <p class="text-[10px] text-gray-500 mt-1 uppercase font-bold">Email не змінюється</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-400 mb-2 block">Новий пароль</label>
+                        <input type="password" class="form-input" placeholder="••••••••" disabled title="У розробці: Зміна пароля через email">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-3xl p-8 stagger-item stagger-3 border border-white/5 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+
+            <h3 class="text-xl font-bold text-white mb-8 border-b border-white/5 pb-4 flex items-center gap-3">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+                Налаштування сповіщень
+            </h3>
+
+            <div class="space-y-6 relative z-10">
+                <div class="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5">
+                    <div>
+                        <h4 class="text-white font-bold text-sm mb-1">Email Сповіщення</h4>
+                        <p class="text-xs text-gray-500">Отримувати листи про нові відгуки та повідомлення.</p>
+                    </div>
+                    <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle1" id="toggle1" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked />
+                        <label for="toggle1" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-10 pt-6 border-t border-white/5 flex justify-between items-center relative z-10">
+                <a href="{% url 'logout' %}" class="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors font-bold text-sm px-6 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Вийти
+                </a>
+
+                <button type="submit" class="{% if user.role == 'client' %}bg-accent-blue hover:bg-accent-blue/80 shadow-[0_0_15px_rgba(0,112,243,0.3)]{% else %}bg-accent-cyan hover:bg-accent-cyan/80 shadow-[0_0_15px_rgba(0,240,255,0.4)]{% endif %} text-white px-8 py-3 rounded-xl font-bold transition-all hover:-translate-y-0.5">
+                    Зберегти Налаштування
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Миттєвий показ вибраного фото
+    function previewImage(event) {
+        const input = event.target;
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('avatar-preview').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+            document.getElementById('delete-avatar-input').value = 'false';
+        }
+    }
+
+    // Видалення фото
+    function deleteAvatar() {
+        if(confirm("Ви впевнені, що хочете видалити фото профілю?")) {
+            // Встановлюємо приховане поле в true і одразу відправляємо форму
+            document.getElementById('delete-avatar-input').value = 'true';
+            document.querySelector('form').submit();
+        }
+    }
+</script>
+{% endblock %}

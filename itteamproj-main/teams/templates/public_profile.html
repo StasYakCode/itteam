@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Резюме: {{ developer.display_name|default:developer.username }}{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card { background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7); }
+</style>
+
+<div class="max-w-3xl mx-auto py-10 page-fade-in">
+    <button onclick="window.close()" class="mb-6 flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Закрити вкладку
+    </button>
+
+    <div class="glass-card rounded-3xl p-10 relative overflow-hidden">
+        <div class="absolute -top-20 -right-20 w-64 h-64 bg-accent-cyan/10 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="flex flex-col md:flex-row gap-8 items-start relative z-10">
+            <div class="w-32 h-32 shrink-0">
+                {% if profile.avatar %}
+                    <img class="w-full h-full rounded-2xl object-cover shadow-[0_0_20px_rgba(0,240,255,0.2)] border border-accent-cyan/50" src="{{ profile.avatar.url }}" alt="Avatar">
+                {% else %}
+                    <img class="w-full h-full rounded-2xl object-cover shadow-[0_0_20px_rgba(0,240,255,0.2)] border border-accent-cyan/50" src="https://ui-avatars.com/api/?name={{ developer.display_name|default:developer.username|urlencode }}&background=050505&color=00f0ff&bold=true&size=256" alt="Avatar">
+                {% endif %}
+            </div>
+
+            <div class="flex-1">
+                <div class="flex flex-wrap justify-between items-start gap-4 mb-2">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-white">{{ developer.display_name|default:developer.username }}</h1>
+                        <p class="text-accent-cyan font-mono text-sm mt-1 uppercase tracking-wide">{{ profile.title|default:"Розробник" }}</p>
+                    </div>
+                    <div class="text-right bg-white/5 border border-white/10 rounded-xl px-4 py-2">
+                        <p class="text-[10px] text-gray-500 uppercase font-bold mb-0.5">Ставка</p>
+                        <p class="text-green-400 font-mono font-bold text-lg">{% if profile.hourly_rate %}${{ profile.hourly_rate }}/год{% else %}Договірна{% endif %}</p>
+                    </div>
+                </div>
+
+                {% if profile.github_link %}
+                <a href="{{ profile.github_link }}" target="_blank" class="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mt-2 text-sm">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.379.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"></path></svg>
+                    GitHub Профіль
+                </a>
+                {% endif %}
+
+                <div class="mt-6">
+                    <p class="text-sm font-bold text-gray-300 mb-3 uppercase tracking-wider">Про себе</p>
+                    <div class="text-gray-300 text-sm leading-relaxed border-l-2 border-accent-cyan/30 pl-4 whitespace-pre-line">
+                        {{ profile.bio|default:"Розробник ще не додав опис про себе." }}
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <p class="text-sm font-bold text-gray-300 mb-3 uppercase tracking-wider">Стек технологій</p>
+                    <div class="flex flex-wrap gap-2">
+                        {% for tag in stack_list %}
+                            <span class="px-3 py-1.5 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-xs font-bold tracking-wide">{{ tag }}</span>
+                        {% empty %}
+                            <span class="text-gray-500 text-sm italic">Стек не вказано</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-white/10">
+                    <button onclick="alert('У розробці: Перехід у повідомлення!')" class="bg-accent-cyan hover:bg-accent-cyan/80 text-black px-8 py-3 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(0,240,255,0.3)] hover:shadow-[0_0_25px_rgba(0,240,255,0.5)]">
+                        Написати повідомлення
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

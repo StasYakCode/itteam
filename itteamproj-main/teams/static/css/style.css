@@ -1,0 +1,139 @@
+/* Custom variables and base styles */
+:root {
+    --bg-color: #0a0a0a;
+    --surface-color: rgba(22, 22, 22, 0.65);
+    --accent-blue: #0070f3;
+    --accent-blue-glow: rgba(0, 112, 243, 0.4);
+    --accent-cyan: #00f0ff;
+    --accent-cyan-glow: rgba(0, 240, 255, 0.4);
+}
+
+/* Glassmorphism Classes */
+.glass-card {
+    background: var(--surface-color);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 3D Hover Animations for Team Cards */
+.card-3d-hover {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
+    transform-style: preserve-3d;
+}
+
+.card-3d-hover:hover {
+    transform: translateY(-8px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 20px 30px rgba(0,0,0,0.6), 0 0 20px var(--accent-blue-glow);
+    border-color: rgba(0, 112, 243, 0.4);
+}
+
+/* Floating Animations */
+@keyframes float {
+    0% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-10px) scale(1.02); }
+    100% { transform: translateY(0px) scale(1); }
+}
+
+.floating-element {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes progressWidth {
+    from { width: 0; opacity: 0; }
+}
+
+/* Smooth expansion for resume progress bars */
+.floating-progress {
+    animation: progressWidth 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Moving shine over progress bars */
+@keyframes shine {
+    from { transform: translateX(-100%) skewX(-15deg); }
+    to { transform: translateX(200%) skewX(-15deg); }
+}
+
+/* Sidebar Item Interaction */
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #9ca3af;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+}
+
+.sidebar-item:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    transform: translateX(4px);
+}
+
+.sidebar-item.active {
+    color: #ffffff;
+    background: linear-gradient(90deg, rgba(0, 112, 243, 0.15), transparent);
+    border-left: 3px solid var(--accent-blue);
+    border-radius: 0 0.5rem 0.5rem 0;
+    box-shadow: -2px 0 10px rgba(0, 112, 243, 0.2);
+}
+
+/* Text glow utilities */
+.text-shadow-neon {
+    text-shadow: 0 0 10px rgba(0, 112, 243, 0.5);
+}
+
+/* Reusable Skill Tag Component */
+.skill-tag {
+    font-size: 0.70rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.3s ease;
+}
+
+.skill-tag:hover {
+    border-color: var(--accent-blue);
+    color: white;
+    background: rgba(0, 112, 243, 0.1);
+    box-shadow: 0 0 10px rgba(0, 112, 243, 0.3);
+}
+
+/* Staggered page load animations */
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-item {
+    opacity: 0;
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+/* Custom Scrollbar */
+.scrollbar-custom::-webkit-scrollbar { width: 6px; }
+.scrollbar-custom::-webkit-scrollbar-track { background: var(--bg-color); }
+.scrollbar-custom::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+.scrollbar-custom::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.page-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}

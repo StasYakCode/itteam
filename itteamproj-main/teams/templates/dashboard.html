@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DevSquad Connect - Dashboard{% endblock %}
+
+{% block header_title %}
+{% if user.role == 'developer' %}Дошка Проєктів{% else %}Пошук Талантів{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card { background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
+    .filter-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: white; transition: all 0.3s ease; }
+    .filter-input:focus { border-color: rgba(0, 240, 255, 0.5); box-shadow: 0 0 15px rgba(0, 240, 255, 0.15); outline: none; }
+    
+    .tab-btn { color: #9ca3af; padding: 0.5rem 1rem; border-bottom: 2px solid transparent; transition: all 0.3s; font-size: 0.875rem; }
+    .tab-btn.active { color: #00f0ff; border-bottom-color: #00f0ff; font-weight: bold; }
+
+    /* Дизайн Select */
+    .custom-select {
+        appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em;
+    }
+</style>
+
+{% if messages %}
+<div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="p-4 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-500/10 text-red-400 border border-red-500/20{% else %}bg-green-500/10 text-green-400 border border-green-500/20{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if user.role == 'client' %}
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Знайдіть ідеальних фахівців</h1>
+        <p class="text-gray-400 max-w-2xl text-sm">Фільтруйте розробників та готові команди за стеком технологій.</p>
+    </div>
+    <a href="{% url 'create_project' %}" class="shrink-0 bg-gradient-to-r from-accent-blue to-accent-cyan text-black px-6 py-3 rounded-xl text-sm font-bold shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)] transition-all">
+        Створити проєкт
+    </a>
+</div>
+
+<form method="GET" action="{% url 'dashboard' %}" class="glass-card rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 relative z-20">
+    <div class="flex-1">
+        <input type="text" name="keyword" value="{{ request.GET.keyword }}" placeholder="Пошук (Python, React, Nexus)..." class="filter-input w-full px-4 py-2.5 rounded-xl text-sm">
+    </div>
+    <select name="stack" class="filter-input custom-select px-4 py-2.5 rounded-xl text-sm cursor-pointer min-w-[150px] bg-[#111]">
+        <option value="">Усі технології</option>
+        {% for tag in available_stacks %}
+        <option value="{{ tag }}" {% if request.GET.stack == tag %}selected{% endif %}>{{ tag|title }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="bg-accent-blue hover:bg-accent-blue/80 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(0,112,243,0.3)]">Шукати</button>
+</form>
+
+<div class="flex gap-4 mb-8 border-b border-white/5">
+    <button onclick="switchTab('solo')" id="tab-solo-btn" class="tab-btn active">Розробники ({{ developers|length }})</button>
+    <button onclick="switchTab('teams')" id="tab-teams-btn" class="tab-btn">Команди ({{ teams|length }})</button>
+</div>
+
+<div id="grid-solo" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
+    {% for dev in developers %}
+    <div class="glass-card rounded-2xl p-6 relative group flex flex-col">
+        <div class="flex items-start justify-between mb-5">
+            <div class="flex items-center gap-4">
+                {% if dev.avatar %}
+                    <img class="w-14 h-14 rounded-xl border border-white/10 object-cover" src="{{ dev.avatar.url }}" alt="Avatar">
+                {% else %}
+                    <img class="w-14 h-14 rounded-xl border border-white/10 object-cover" src="https://ui-avatars.com/api/?name={{ dev.user.display_name|urlencode }}&background=050505&color=00f0ff&bold=true">
+                {% endif %}
+                <div>
+                    <h3 class="font-bold text-lg text-white">{{ dev.user.display_name }}</h3>
+                    <p class="text-xs text-gray-400">{{ dev.title|default:"Розробник" }}</p>
+                </div>
+            </div>
+            <span class="text-green-400 font-mono text-xs font-bold">${{ dev.hourly_rate|default:"0" }}/год</span>
+        </div>
+        <p class="text-gray-400 text-sm mb-5 line-clamp-2">{{ dev.bio|default:"Користувач ще не додав опис." }}</p>
+        <div class="flex gap-2 mt-auto">
+            <button onclick="openInviteModal('{{ dev.user.id }}', '{{ dev.user.display_name|escapejs }}')" class="flex-1 py-2.5 rounded-xl bg-accent-cyan/10 hover:bg-accent-cyan hover:text-black text-accent-cyan border border-accent-cyan/30 transition-all font-bold text-xs">Запросити</button>
+            <a href="{% url 'create_direct_chat' 'solo' dev.user.id %}" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all" title="Написати">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-12 text-gray-400">Розробників не знайдено.</div>
+    {% endfor %}
+</div>
+
+<div id="grid-teams" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10 hidden">
+    {% for team in teams %}
+    <div class="glass-card rounded-2xl p-6 border-l-4 border-accent-cyan flex flex-col group">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <span class="text-[9px] bg-accent-cyan/10 text-accent-cyan px-2 py-0.5 rounded uppercase font-bold tracking-widest">Команда</span>
+                <h3 class="font-bold text-xl text-white mt-1 group-hover:text-accent-cyan transition-colors">{{ team.name }}</h3>
+                <p class="text-xs text-gray-400 mt-1">{{ team.specialization|default:"Custom Solutions" }}</p>
+            </div>
+            <div class="flex -space-x-2">
+                {% for member in team.members.all|slice:":3" %}
+                    <img class="w-8 h-8 rounded-full border-2 border-[#111] object-cover" src="https://ui-avatars.com/api/?name={{ member.display_name|urlencode }}&background=random" alt="Member">
+                {% endfor %}
+            </div>
+        </div>
+        <p class="text-gray-400 text-sm mb-5 line-clamp-2">{{ team.description|default:"Команда готова до складних проєктів." }}</p>
+        <div class="flex gap-2 mt-auto">
+            <button onclick="openInviteModal('{{ team.captain.id }}', '{{ team.name|escapejs }} (Команда)')" class="flex-1 py-2.5 rounded-xl bg-accent-blue text-white font-bold text-xs shadow-[0_0_10px_rgba(0,112,243,0.2)]">Запросити команду</button>
+            <a href="{% url 'create_direct_chat' 'team' team.id %}" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all" title="Написати команді">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-12 text-gray-400">Команд не знайдено.</div>
+    {% endfor %}
+</div>
+
+<div id="invite-modal" class="fixed inset-0 bg-[#050505]/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity">
+    <div class="absolute inset-0" onclick="closeModal('invite-modal')"></div>
+    <div class="glass-card rounded-2xl w-full max-w-lg p-8 relative z-10 border border-accent-cyan/30 transform scale-95 transition-transform" id="invite-content">
+        <h2 class="text-2xl font-bold text-white mb-2">Надіслати пропозицію</h2>
+        <p class="text-gray-400 text-sm mb-6">Ви запрошуєте: <span id="invite-dev-name" class="text-accent-cyan font-bold"></span></p>
+        <form action="{% url 'invite_developer' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="developer_id" id="invite-dev-id">
+            <div>
+                <label class="text-xs text-gray-400 mb-1 block">Оберіть ваш активний проєкт</label>
+                <select name="project_id" required class="filter-input w-full px-4 py-3 rounded-xl text-sm bg-[#111]">
+                    {% for p in my_projects %}
+                    <option value="{{ p.id }}">{{ p.title }}</option>
+                    {% endfor %}
+                </select>
+                {% if not my_projects %}<p class="text-red-400 text-[10px] mt-1">Спочатку створіть проєкт.</p>{% endif %}
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 mb-1 block">Супровідний текст</label>
+                <textarea name="cover_letter" required rows="4" class="filter-input w-full px-4 py-3 rounded-xl text-sm resize-none" placeholder="Привіт! Нас зацікавив твій досвід..."></textarea>
+            </div>
+            <button type="submit" class="w-full mt-4 bg-accent-cyan text-black py-3 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(0,240,255,0.3)]">Відправити</button>
+        </form>
+    </div>
+</div>
+
+{% else %}
+<div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Відкриті проєкти</h1>
+    <p class="text-gray-400 max-w-2xl text-sm">Знайдіть цікаві завдання від перевірених замовників.</p>
+</div>
+
+<form method="GET" action="{% url 'dashboard' %}" class="glass-card rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 relative z-20">
+    <div class="flex-1">
+        <input type="text" name="keyword" value="{{ request.GET.keyword }}" placeholder="Знайти проєкт..." class="filter-input w-full px-4 py-2.5 rounded-xl text-sm">
+    </div>
+    <select name="stack" class="filter-input custom-select px-4 py-2.5 rounded-xl text-sm cursor-pointer min-w-[150px] bg-[#111]">
+        <option value="">Стек / Технологія</option>
+        {% for tag in available_stacks %}
+        <option value="{{ tag }}" {% if request.GET.stack == tag %}selected{% endif %}>{{ tag|title }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="bg-accent-blue text-white px-6 py-2.5 rounded-xl text-sm font-bold">Шукати</button>
+</form>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
+    {% for project in projects %}
+    <div class="glass-card rounded-2xl p-6 flex flex-col border border-white/5 hover:border-accent-blue/30 transition-all group">
+        <div class="flex items-start gap-3 mb-4">
+            {% if project.client.client_profile.avatar %}
+                <img src="{{ project.client.client_profile.avatar.url }}" class="w-8 h-8 rounded border border-white/10 object-cover" alt="Client">
+            {% else %}
+                <div class="w-8 h-8 rounded bg-white/5 flex items-center justify-center text-[10px] text-gray-500 font-bold">CL</div>
+            {% endif %}
+            <div>
+                <span class="text-[10px] font-bold text-gray-500 uppercase">{{ project.client.display_name }}</span>
+                <h3 class="font-bold text-xl text-white mt-0.5 group-hover:text-accent-blue transition-colors">{{ project.title }}</h3>
+            </div>
+        </div>
+        <p class="text-gray-400 text-sm mb-5 line-clamp-3">{{ project.description }}</p>
+        <div class="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+            <div>
+                <p class="text-[10px] text-gray-500 uppercase font-bold">Бюджет</p>
+                <p class="text-accent-cyan font-mono font-bold">{% if project.budget %}${{ project.budget }}{% else %}Договірна{% endif %}</p>
+            </div>
+            <button onclick="openApplyModal('{{ project.id }}', '{{ project.title|escapejs }}')" class="px-4 py-2 rounded-lg bg-accent-blue hover:bg-accent-blue/80 text-white text-xs font-bold transition-all shadow-[0_0_10px_rgba(0,112,243,0.3)]">Відгукнутись</button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-12 text-gray-400">Наразі немає відкритих проєктів.</div>
+    {% endfor %}
+</div>
+
+<div id="apply-modal" class="fixed inset-0 bg-[#050505]/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity">
+    <div class="absolute inset-0" onclick="closeModal('apply-modal')"></div>
+    <div class="glass-card rounded-2xl w-full max-w-lg p-8 relative z-10 border border-accent-blue/30 transform scale-95 transition-transform" id="apply-content">
+        <h2 class="text-2xl font-bold text-white mb-2">Відгук на проєкт</h2>
+        <p class="text-gray-400 text-sm mb-6">Проєкт: <span id="apply-proj-title" class="text-accent-blue font-bold"></span></p>
+        <form action="{% url 'apply_project' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="project_id" id="apply-proj-id">
+            <div>
+                <label class="text-xs text-gray-400 mb-1 block">Як ви будете працювати?</label>
+                <select name="format_work" id="format-select" onchange="toggleTeamSelect()" class="filter-input w-full px-4 py-2.5 rounded-xl text-sm bg-[#111]">
+                    <option value="Соло">Я працюю сам (Соло)</option>
+                    <option value="Команда">Разом із командою</option>
+                </select>
+            </div>
+            <div id="team-select-div" class="hidden">
+                <label class="text-xs text-gray-400 mb-1 block text-accent-cyan">Оберіть вашу команду</label>
+                <select name="team_id" id="team-select" class="filter-input w-full px-4 py-2.5 rounded-xl text-sm bg-[#111]">
+                    {% for team in my_teams %}<option value="{{ team.id }}">{{ team.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-gray-400 mb-1 block">Ставка ($)</label>
+                    <input type="number" name="proposed_rate" class="filter-input w-full px-4 py-2.5 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 mb-1 block">Час (год)</label>
+                    <input type="number" name="estimated_hours" class="filter-input w-full px-4 py-2.5 rounded-xl text-sm">
+                </div>
+            </div>
+            <div>
+                <label class="text-xs text-gray-400 mb-1 block">Супровідний лист</label>
+                <textarea name="cover_letter" required rows="4" class="filter-input w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea>
+            </div>
+            <button type="submit" class="w-full mt-4 bg-accent-blue text-white py-3 rounded-xl font-bold">Надіслати відгук</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    function switchTab(type) {
+        const soloGrid = document.getElementById('grid-solo');
+        const teamsGrid = document.getElementById('grid-teams');
+        const soloBtn = document.getElementById('tab-solo-btn');
+        const teamsBtn = document.getElementById('tab-teams-btn');
+
+        if (type === 'solo') {
+            soloGrid.classList.remove('hidden'); teamsGrid.classList.add('hidden');
+            soloBtn.classList.add('active'); teamsBtn.classList.remove('active');
+        } else {
+            soloGrid.classList.add('hidden'); teamsGrid.classList.remove('hidden');
+            teamsBtn.classList.add('active'); soloBtn.classList.remove('active');
+        }
+    }
+
+    function openInviteModal(id, name) {
+        document.getElementById('invite-dev-id').value = id;
+        document.getElementById('invite-dev-name').textContent = name;
+        openModal('invite-modal');
+    }
+
+    function openApplyModal(id, title) {
+        document.getElementById('apply-proj-id').value = id;
+        document.getElementById('apply-proj-title').textContent = title;
+        openModal('apply-modal');
+    }
+
+    function toggleTeamSelect() {
+        const div = document.getElementById('team-select-div');
+        div.classList.toggle('hidden', document.getElementById('format-select').value !== 'Команда');
+    }
+
+    function openModal(id) {
+        const m = document.getElementById(id);
+        m.classList.remove('hidden'); void m.offsetWidth; m.classList.add('opacity-100');
+        m.querySelector('.transform').classList.remove('scale-95');
+    }
+
+    function closeModal(id) {
+        const m = document.getElementById(id);
+        m.classList.remove('opacity-100'); m.querySelector('.transform').classList.add('scale-95');
+        setTimeout(() => m.classList.add('hidden'), 300);
+    }
+</script>
+{% endblock %}

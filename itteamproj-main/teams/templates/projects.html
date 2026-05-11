@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DevSquad Connect - Мої Проєкти{% endblock %}
+{% block header_title %}Мої Проєкти{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card { background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
+    .status-badge-neon { box-shadow: 0 0 10px rgba(0, 112, 243, 0.4); border: 1px solid rgba(0, 112, 243, 0.5); background: rgba(0, 112, 243, 0.1); color: #00f0ff; }
+    .status-badge-green { box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); border: 1px solid rgba(34, 197, 94, 0.5); background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .status-badge-gray { border: 1px solid rgba(156, 163, 175, 0.3); background: rgba(156, 163, 175, 0.1); color: #9ca3af; }
+    .status-badge-cyan { box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); border: 1px solid rgba(0, 240, 255, 0.5); background: rgba(0, 240, 255, 0.1); color: #00f0ff; }
+    .kanban-col { min-height: 500px; }
+    .scrollbar-custom::-webkit-scrollbar { width: 6px; }
+    .scrollbar-custom::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-custom::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+</style>
+
+{% if messages %}
+<div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="p-4 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-500/10 text-red-400 border border-red-500/20{% else %}bg-green-500/10 text-green-400 border border-green-500/20{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if user.role == 'client' %}
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 stagger-item stagger-1">
+    <div>
+        <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Дошка Проєктів</h1>
+        <p class="text-gray-400 text-sm max-w-xl">Керуйте своїми активними проєктами, відслідковуйте заявки від команд та контролюйте розробку.</p>
+    </div>
+    <a href="{% url 'create_project' %}" class="shrink-0 bg-gradient-to-r from-accent-blue to-accent-cyan text-black px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(0,112,243,0.3)] hover:shadow-[0_0_25px_rgba(0,112,243,0.5)] flex items-center gap-2 group hover:-translate-y-0.5">
+        <svg class="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Створити новий проєкт
+    </a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-10 stagger-item stagger-2">
+    <div class="kanban-col glass-card rounded-2xl p-4 flex flex-col gap-4">
+        <div class="flex items-center justify-between px-2 mb-2">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-accent-blue shadow-[0_0_8px_rgba(0,112,243,0.8)]"></span>
+                Пошук виконавця
+            </h3>
+            <span class="text-xs font-mono bg-white/10 px-2 py-0.5 rounded text-gray-400">{{ active_projects|length }}</span>
+        </div>
+
+        {% for project in active_projects %}
+        <div class="bg-surface/50 border border-white/5 hover:border-accent-blue/30 rounded-xl p-5 hover:-translate-y-1 transition-all cursor-pointer group">
+            <div class="flex justify-between items-start mb-3">
+                <span class="text-[10px] font-bold tracking-wider px-2 py-1 rounded status-badge-neon uppercase">Активно</span>
+                <span class="text-xs text-gray-500 font-mono">{{ project.created_at|date:"d M" }}</span>
+            </div>
+            <h4 class="font-bold text-lg text-white mb-2 group-hover:text-accent-blue transition-colors leading-tight">{{ project.title }}</h4>
+            <p class="text-gray-400 text-xs line-clamp-2 mb-4">{{ project.description }}</p>
+            
+            <div class="flex items-center gap-4 mb-5 text-sm">
+                <div class="flex items-center gap-1.5 text-gray-300">
+                    <svg class="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span>{{ project.pending_count }} Заявок</span>
+                </div>
+            </div>
+            
+            {% if project.pending_count > 0 %}
+            <button onclick="openAppsModal('{{ project.id }}')" class="w-full py-2 rounded-lg bg-accent-blue/10 hover:bg-accent-blue text-accent-blue hover:text-white border border-accent-blue/30 transition-all font-medium text-xs flex justify-center items-center gap-2">
+                Переглянути відгуки
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            </button>
+            {% else %}
+            <button class="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all font-medium text-xs">
+                Очікує відгуків
+            </button>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center py-10 text-gray-500 text-sm border-2 border-dashed border-white/5 rounded-xl">Немає проєктів</div>
+        {% endfor %}
+    </div>
+
+    <div class="kanban-col glass-card rounded-2xl p-4 flex flex-col gap-4">
+        <div class="flex items-center justify-between px-2 mb-2">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+                В роботі
+            </h3>
+            <span class="text-xs font-mono bg-white/10 px-2 py-0.5 rounded text-gray-400">{{ in_progress_projects|length }}</span>
+        </div>
+
+        {% for project in in_progress_projects %}
+        <div class="bg-surface/50 border border-white/5 hover:border-green-500/30 rounded-xl p-5 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+            
+            <div class="flex justify-between items-start mb-3">
+                <span class="text-[10px] font-bold tracking-wider px-2 py-1 rounded status-badge-green uppercase flex items-center gap-1">Розробка</span>
+                
+                <span class="text-[10px] font-bold tracking-wider px-2 py-1 rounded {% if project.payment_status == 'paid' %}bg-green-500/20 text-green-400 border border-green-500/30{% elif project.payment_status == 'frozen' %}bg-blue-500/20 text-blue-400 border border-blue-500/30{% else %}bg-yellow-500/20 text-yellow-500 border border-yellow-500/30{% endif %} uppercase">
+                    {% if project.payment_status == 'paid' %}Оплачено
+                    {% elif project.payment_status == 'frozen' %}Очікує підтвердження
+                    {% else %}Очікує Оплати{% endif %}
+                </span>
+            </div>
+
+            <h4 class="font-bold text-lg text-white mb-2 group-hover:text-green-400 transition-colors leading-tight">{{ project.title }}</h4>
+
+            <div class="flex items-center gap-3 mt-4 mb-4 p-2 bg-black/40 rounded-lg border border-white/5">
+                {% if project.active_developer.developer_profile.avatar %}
+                    <img src="{{ project.active_developer.developer_profile.avatar.url }}" class="w-8 h-8 rounded border border-accent-cyan/30 object-cover" alt="Team">
+                {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ project.active_developer.display_name|urlencode }}&background=111&color=00f0ff" class="w-8 h-8 rounded border border-accent-cyan/30 object-cover" alt="Team">
+                {% endif %}
+                <div>
+                    <p class="text-[10px] text-gray-500 uppercase font-bold">Виконавець</p>
+                    <p class="text-xs text-white font-medium">{{ project.active_developer.display_name }}</p>
+                </div>
+            </div>
+
+            <button class="w-full py-2 rounded-lg bg-surface hover:bg-white/10 border border-white/10 text-white transition-all font-medium text-xs flex justify-center items-center gap-2">Перейти в чат</button>
+        </div>
+        {% empty %}
+        <div class="text-center py-10 text-gray-500 text-sm border-2 border-dashed border-white/5 rounded-xl">Немає активної розробки</div>
+        {% endfor %}
+    </div>
+
+    <div class="kanban-col glass-card rounded-2xl p-4 flex flex-col gap-4 opacity-70">
+        <div class="flex items-center justify-between px-2 mb-2">
+            <h3 class="font-bold text-gray-300 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-gray-500 shadow-[0_0_8px_rgba(156,163,175,0.5)]"></span>
+                Завершено
+            </h3>
+            <span class="text-xs font-mono bg-white/5 px-2 py-0.5 rounded text-gray-500">{{ completed_projects|length }}</span>
+        </div>
+        <div class="text-center py-10 text-gray-500 text-sm border-2 border-dashed border-white/5 rounded-xl">Ще немає завершених проєктів</div>
+    </div>
+</div>
+
+{% for project in active_projects %}
+    {% if project.pending_count > 0 %}
+    <div id="modal-apps-{{ project.id }}" class="fixed inset-0 bg-[#050505]/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="absolute inset-0" onclick="closeAppsModal('{{ project.id }}')"></div>
+        <div class="glass-card rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col relative z-10 border border-accent-blue/30 transform scale-95 transition-transform duration-300">
+            
+            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-surface/80 rounded-t-2xl">
+                <h2 class="text-xl font-bold text-white">Відгуки на: <span class="text-accent-blue">{{ project.title }}</span></h2>
+                <button onclick="closeAppsModal('{{ project.id }}')" class="text-gray-400 hover:text-white p-2 hover:bg-white/5 rounded-lg transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 scrollbar-custom bg-[#050505]">
+                {% for app in project.applications.all %}
+                {% if app.status == 'pending_client' or app.status == 'pending_developer' %}
+                
+                <div class="bg-surface border border-white/5 rounded-xl p-5 hover:border-accent-cyan/30 transition-colors">
+                    <div class="flex justify-between items-start mb-4">
+                        {% if app.team %}
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/30 text-[10px] font-bold uppercase tracking-wider">Команда</span>
+                                <span class="text-white font-bold">{{ app.team.name }}</span>
+                            </div>
+                        {% else %}
+                            <span class="px-2 py-1 rounded bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30 text-[10px] font-bold uppercase tracking-wider">Соло-фахівець</span>
+                        {% endif %}
+                        
+                        <div class="text-right">
+                            <p class="text-white font-mono font-bold">${{ app.proposed_rate|default:"Договірна" }}</p>
+                            <p class="text-[10px] text-gray-500 uppercase font-bold">{{ app.estimated_hours|default:"~" }} год</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-5 space-y-3 bg-black/30 p-4 rounded-xl border border-white/5">
+                        {% if app.team %}
+                            <div class="flex items-center justify-between pb-3 border-b border-white/5">
+                                <div class="flex items-center gap-3">
+                                    {% if app.team.captain.developer_profile.avatar %}
+                                        <img src="{{ app.team.captain.developer_profile.avatar.url }}" class="w-10 h-10 rounded-xl border border-yellow-500/30 object-cover">
+                                    {% else %}
+                                        <img src="https://ui-avatars.com/api/?name={{ app.team.captain.display_name|urlencode }}&background=111&color=eab308" class="w-10 h-10 rounded-xl border border-yellow-500/30 object-cover">
+                                    {% endif %}
+                                    <div>
+                                        <p class="text-sm text-white font-bold">{{ app.team.captain.display_name|default:app.team.captain.username }} <span class="text-[10px] text-yellow-500 ml-1 uppercase bg-yellow-500/10 px-1 rounded border border-yellow-500/20">Капітан</span></p>
+                                        <p class="text-xs text-gray-400">Розробник</p>
+                                    </div>
+                                </div>
+                                <a href="{% url 'public_profile' app.team.captain.id %}" target="_blank" class="text-[10px] font-bold text-accent-cyan border border-accent-cyan/30 hover:bg-accent-cyan hover:text-black px-3 py-1.5 rounded-lg transition-colors inline-block">Резюме</a>
+                            </div>
+                            {% for member in app.team.members.all %}
+                            <div class="flex items-center justify-between pl-4 border-l-2 border-white/5">
+                                <div class="flex items-center gap-3">
+                                    {% if member.developer_profile.avatar %}
+                                        <img src="{{ member.developer_profile.avatar.url }}" class="w-8 h-8 rounded-lg border border-white/10 object-cover">
+                                    {% else %}
+                                        <img src="https://ui-avatars.com/api/?name={{ member.display_name|urlencode }}&background=111&color=fff" class="w-8 h-8 rounded-lg border border-white/10 object-cover">
+                                    {% endif %}
+                                    <div>
+                                        <p class="text-sm text-gray-300 font-medium">{{ member.display_name|default:member.username }}</p>
+                                        <p class="text-xs text-gray-500">Учасник команди</p>
+                                    </div>
+                                </div>
+                                <a href="{% url 'public_profile' member.id %}" target="_blank" class="text-[10px] font-bold text-gray-400 border border-gray-600 hover:text-white hover:border-white px-3 py-1.5 rounded-lg transition-colors inline-block">Резюме</a>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    {% if app.developer.developer_profile.avatar %}
+                                        <img src="{{ app.developer.developer_profile.avatar.url }}" class="w-10 h-10 rounded-xl border border-accent-cyan/30 object-cover">
+                                    {% else %}
+                                        <img src="https://ui-avatars.com/api/?name={{ app.developer.display_name|urlencode }}&background=111&color=00f0ff" class="w-10 h-10 rounded-xl border border-accent-cyan/30 object-cover">
+                                    {% endif %}
+                                    <div>
+                                        <p class="text-sm text-white font-bold">{{ app.developer.display_name|default:app.developer.username }}</p>
+                                        <p class="text-xs text-gray-400">Незалежний фахівець</p>
+                                    </div>
+                                </div>
+                                <a href="{% url 'public_profile' app.developer.id %}" target="_blank" class="text-[10px] font-bold text-accent-cyan border border-accent-cyan/30 hover:bg-accent-cyan hover:text-black px-3 py-1.5 rounded-lg transition-colors inline-block">Переглянути резюме</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="bg-black/50 rounded-lg p-4 border border-white/5 text-sm text-gray-300 italic mb-4 leading-relaxed border-l-4 border-l-accent-blue/50">
+                        {{ app.cover_letter }}
+                    </div>
+
+                    <div class="flex gap-3 mt-4">
+                        {% if app.status == 'pending_client' %}
+                            <form action="{% url 'respond_to_application' app.id %}" method="POST" class="flex-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="w-full py-2.5 bg-accent-cyan text-black font-bold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(0,240,255,0.3)] hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] hover:-translate-y-0.5">Схвалити виконавця</button>
+                            </form>
+                            <form action="{% url 'respond_to_application' app.id %}" method="POST" class="flex-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject">
+                                <input type="hidden" name="rejection_reason" value="Замовник відхилив вашу кандидатуру.">
+                                <button type="submit" class="w-full py-2.5 bg-red-500/10 text-red-400 border border-red-500/30 font-bold text-xs rounded-xl hover:bg-red-500 hover:text-white transition-all">Відхилити</button>
+                            </form>
+                        {% else %}
+                            <button class="w-full py-2.5 bg-white/5 text-gray-400 border border-white/10 font-bold text-xs rounded-xl cursor-not-allowed" disabled>
+                                Очікуємо відповідь від фахівця...
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% else %}
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 stagger-item stagger-1">
+    <div>
+        <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Робочий Простір</h1>
+        <p class="text-gray-400 text-sm max-w-xl">Відстежуйте статуси своїх заявок на проєкти та переходьте до активної розробки.</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-10 stagger-item stagger-2">
+    <div class="kanban-col glass-card rounded-2xl p-4 flex flex-col gap-4">
+        <div class="flex items-center justify-between px-2 mb-2">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.8)]"></span>
+                Очікують відповіді
+            </h3>
+            <span class="text-xs font-mono bg-white/10 px-2 py-0.5 rounded text-gray-400">{{ pending_apps|length }}</span>
+        </div>
+
+        {% for app in pending_apps %}
+        <div class="bg-surface/50 border border-white/5 hover:border-yellow-500/30 rounded-xl p-5 hover:-translate-y-1 transition-all cursor-pointer group flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-[10px] font-bold tracking-wider px-2 py-1 rounded border border-yellow-500/30 bg-yellow-500/10 text-yellow-500 uppercase">
+                        {% if app.status == 'pending_client' %}Наш відгук{% else %}Запрошення{% endif %}
+                    </span>
+                    <span class="text-xs text-gray-500 font-mono">{{ app.created_at|date:"d M" }}</span>
+                </div>
+                <h4 class="font-bold text-lg text-white mb-2 group-hover:text-yellow-400 transition-colors leading-tight">{{ app.project.title }}</h4>
+                <p class="text-gray-400 text-xs line-clamp-2 mb-4">{{ app.project.client.display_name|default:"Замовник" }}</p>
+            </div>
+
+            {% if app.status == 'pending_developer' %}
+                <div class="flex gap-2 w-full mt-auto">
+                    <form action="{% url 'respond_to_application' app.id %}" method="POST" class="flex-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="w-full py-2 rounded-lg bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-white border border-green-500/30 transition-all font-bold text-xs shadow-[0_0_10px_rgba(34,197,94,0.1)]">Прийняти</button>
+                    </form>
+                    <form action="{% url 'respond_to_application' app.id %}" method="POST" class="flex-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject">
+                        <input type="hidden" name="rejection_reason" value="Розробник відмовився від проєкту.">
+                        <button type="submit" class="w-full py-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 transition-all font-bold text-xs">Відмовитись</button>
+                    </form>
+                </div>
+            {% else %}
+                <button class="w-full py-2 rounded-lg bg-yellow-500/10 text-yellow-500/50 border border-yellow-500/30 cursor-not-allowed font-medium text-xs mt-auto" disabled>
+                    Очікування відповіді клієнта...
+                </button>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center py-10 text-gray-500 text-sm border-2 border-dashed border-white/5 rounded-xl">Немає заявок в очікуванні</div>
+        {% endfor %}
+    </div>
+
+    <div class="kanban-col glass-card rounded-2xl p-4 flex flex-col gap-4">
+        <div class="flex items-center justify-between px-2 mb-2">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-accent-cyan shadow-[0_0_8px_rgba(0,240,255,0.8)]"></span>
+                В розробці
+            </h3>
+            <span class="text-xs font-mono bg-white/10 px-2 py-0.5 rounded text-gray-400">{{ approved_apps|length }}</span>
+        </div>
+
+        {% for app in approved_apps %}
+        <div class="bg-surface/50 border border-white/5 hover:border-accent-cyan/30 rounded-xl p-5 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden flex flex-col justify-between">
+            <div class="absolute top-0 left-0 w-1 h-full bg-accent-cyan shadow-[0_0_10px_rgba(0,240,255,0.5)]"></div>
+            <div>
+                
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-[10px] font-bold tracking-wider px-2 py-1 rounded status-badge-cyan uppercase flex items-center gap-1">Кодиться</span>
+                    
+                    {% if app.project.payment_status == 'paid' %}
+                        <span class="text-[10px] font-bold px-2 py-1 rounded bg-green-500/20 text-green-400 border border-green-500/30 uppercase tracking-wider">✅ Оплачено</span>
+                    {% elif app.project.payment_status == 'frozen' %}
+                        <form action="{% url 'confirm_payment' app.project.id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="text-[10px] font-bold px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-all uppercase tracking-wider animate-pulse">
+                                Підтвердити оплату
+                            </button>
+                        </form>
+                    {% else %}
+                        <span class="text-[10px] font-bold px-2 py-1 rounded bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 uppercase tracking-wider flex items-center gap-1.5">
+                            <svg class="animate-spin h-3 w-3 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Очікує оплати
+                        </span>
+                    {% endif %}
+                </div>
+
+                <h4 class="font-bold text-lg text-white mb-2 group-hover:text-accent-cyan transition-colors leading-tight">{{ app.project.title }}</h4>
+
+                <div class="flex items-center justify-between mt-4">
+                    <div class="flex items-center gap-2">
+                        {% if app.project.client.client_profile.avatar %}
+                            <img src="{{ app.project.client.client_profile.avatar.url }}" class="w-6 h-6 rounded-full border border-[#111] object-cover" alt="Client">
+                        {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ app.project.client.display_name|urlencode }}&background=0a0a0a&color=00f0ff" class="w-6 h-6 rounded-full border border-[#111] object-cover" alt="Client">
+                        {% endif %}
+                        <span class="text-xs text-gray-400">{{ app.project.client.display_name }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="w-full mt-4 py-2 rounded-lg bg-surface hover:bg-white/10 border border-white/10 text-white transition-all font-medium text-xs flex justify-center items-center gap-2">Перейти в чат</button>
+        </div>
+        {% empty %}
+        <div class="text-center py-10 text-gray-500 text-sm border-2 border-dashed border-white/5 rounded-xl">Немає активних проєктів</div>
+        {% endfor %}
+    </div>
+
+    <div class="kanban-col glass-card rounded-2xl p-4 flex flex-col gap-4 opacity-70 hover:opacity-100 transition-opacity">
+        <div class="flex items-center justify-between px-2 mb-2">
+            <h3 class="font-bold text-gray-300 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
+                Відхилені
+            </h3>
+            <span class="text-xs font-mono bg-white/5 px-2 py-0.5 rounded text-gray-500">{{ rejected_apps|length }}</span>
+        </div>
+
+        {% for app in rejected_apps %}
+        <div class="bg-surface/30 border border-white/5 rounded-xl p-5 group grayscale hover:grayscale-0 transition-all duration-300 flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-[10px] font-bold tracking-wider px-2 py-1 rounded status-badge-gray uppercase">Відхилено</span>
+                </div>
+                <h4 class="font-bold text-lg text-white mb-2 leading-tight">{{ app.project.title }}</h4>
+                <p class="text-gray-500 text-xs mb-4">{{ app.rejection_reason|default:"Замовник обрав іншого виконавця." }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-10 text-gray-500 text-sm border-2 border-dashed border-white/5 rounded-xl">Немає відхилених заявок</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+    function openAppsModal(projectId) {
+        const modal = document.getElementById('modal-apps-' + projectId);
+        if (modal) {
+            modal.classList.remove('hidden');
+            void modal.offsetWidth; // Анімація появи
+            modal.classList.add('opacity-100');
+            const content = modal.querySelector('.transform');
+            if(content) content.classList.remove('scale-95');
+        }
+    }
+
+    function closeAppsModal(projectId) {
+        const modal = document.getElementById('modal-apps-' + projectId);
+        if (modal) {
+            modal.classList.remove('opacity-100');
+            const content = modal.querySelector('.transform');
+            if(content) content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+    }
+</script>
+{% endblock %}

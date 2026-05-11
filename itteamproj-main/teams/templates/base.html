@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DevSquad Connect{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'], },
+                    colors: { blackbg: '#050505', surface: '#111111', accent: { blue: '#0070f3', cyan: '#00f0ff' } }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .scrollbar-custom::-webkit-scrollbar { width: 6px; }
+        .scrollbar-custom::-webkit-scrollbar-track { background: #050505; }
+        .scrollbar-custom::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover { background: #0070f3; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .page-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .stagger-item { opacity: 0; animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .stagger-1 { animation-delay: 0.1s; } .stagger-2 { animation-delay: 0.2s; } .stagger-3 { animation-delay: 0.3s; }
+        
+        .sidebar-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; color: #9ca3af; transition: all 0.2s ease-in-out; border: 1px solid transparent; }
+        .sidebar-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.08); transform: translateX(4px); }
+        .sidebar-item.active { color: #ffffff; background: linear-gradient(90deg, rgba(0, 112, 243, 0.15), transparent); border-left: 3px solid #0070f3; border-radius: 0 0.5rem 0.5rem 0; box-shadow: -2px 0 10px rgba(0, 112, 243, 0.2); }
+        .sidebar-item.active-cyan { color: #ffffff; background: linear-gradient(90deg, rgba(0, 240, 255, 0.15), transparent); border-left: 3px solid #00f0ff; border-radius: 0 0.5rem 0.5rem 0; box-shadow: -2px 0 10px rgba(0, 240, 255, 0.2); }
+    </style>
+</head>
+
+<body class="bg-[#050505] text-gray-200 font-sans antialiased overflow-x-hidden min-h-screen flex selection:bg-accent-cyan selection:text-black">
+
+    <aside class="w-64 bg-[#111111]/80 backdrop-blur-xl border-r border-white/5 h-screen sticky top-0 flex flex-col z-50 shadow-[5px_0_30px_rgba(0,0,0,0.5)]">
+        <div class="p-6 flex items-center gap-3 border-b border-white/5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-cyan flex justify-center items-center font-bold text-white shadow-[0_0_15px_rgba(0,112,243,0.5)]">DS</div>
+            <span class="font-extrabold text-xl tracking-tight text-white hover:text-accent-cyan transition-colors cursor-pointer">DevSquad<span class="text-accent-blue">Connect</span></span>
+        </div>
+
+        <nav class="flex-1 py-6 px-4 space-y-2">
+            <a href="{% url 'dashboard' %}" class="sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}{% if user.role == 'client' %}active{% else %}active-cyan{% endif %}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                Dashboard
+            </a>
+
+            {% if user.role == 'client' %}
+            <a href="{% url 'projects' %}" class="sidebar-item {% if request.resolver_match.url_name == 'projects' %}active{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                Мої Проєкти
+            </a>
+            
+            <a href="{% url 'payments' %}" class="sidebar-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %} text-green-400/80 hover:text-green-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Оплата
+            </a>
+
+            {% else %}
+            <a href="{% url 'teams' %}" class="sidebar-item {% if request.resolver_match.url_name == 'teams' %}active-cyan{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                Команди
+            </a>
+            <a href="{% url 'projects' %}" class="sidebar-item {% if request.resolver_match.url_name == 'projects' %}active-cyan{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                Робочий Простір
+            </a>
+            
+            <a href="{% url 'payments' %}" class="sidebar-item {% if request.resolver_match.url_name == 'payments' %}active-cyan{% endif %} text-green-400/80 hover:text-green-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Мої Фінанси
+            </a>
+            {% endif %}
+
+            <a href="{% url 'messages' %}" class="sidebar-item relative {% if request.resolver_match.url_name == 'messages' %}{% if user.role == 'client' %}active{% else %}active-cyan{% endif %}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
+                Повідомлення
+                <span class="absolute right-4 top-3 flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-cyan opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-accent-cyan"></span>
+                </span>
+            </a>
+            <a href="{% url 'settings' %}" class="sidebar-item {% if request.resolver_match.url_name == 'settings' %}{% if user.role == 'client' %}active{% else %}active-cyan{% endif %}{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Налаштування
+            </a>
+            
+            <a href="{% url 'logout' %}" class="sidebar-item text-red-500/70 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 mt-4 border border-transparent">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Вийти
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-white/5 cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-3">
+                {% if user.role == 'client' and user.client_profile.avatar %}
+                    <img class="h-10 w-10 rounded-full border border-gray-700 hover:border-accent-blue transition-colors object-cover" src="{{ user.client_profile.avatar.url }}" alt="User Avatar">
+                {% elif user.role == 'developer' and user.developer_profile.avatar %}
+                    <img class="h-10 w-10 rounded-full border border-gray-700 hover:border-accent-blue transition-colors object-cover" src="{{ user.developer_profile.avatar.url }}" alt="User Avatar">
+                {% else %}
+                    <img class="h-10 w-10 rounded-full border border-gray-700 hover:border-accent-blue transition-colors" src="https://ui-avatars.com/api/?name={{ user.display_name|default:user.username|urlencode }}&background=0a0a0a&color=00f0ff" alt="User Avatar">
+                {% endif %}
+                <div>
+                    <p class="text-sm font-bold text-white">{{ user.display_name|default:user.username }}</p>
+                    <p class="text-xs text-gray-400 font-mono mt-0.5">{% if user.role == 'client' %}Замовник{% else %}Розробник{% endif %}</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto page-fade-in relative scrollbar-custom bg-[#050505]">
+        <header class="h-16 border-b border-white/5 bg-[#111111]/80 backdrop-blur-xl sticky top-0 z-40 flex items-center justify-between px-8 shadow-sm">
+            <h2 class="text-lg font-bold text-white tracking-wide">{% block header_title %}Головна{% endblock %}</h2>
+            <div class="flex items-center gap-4">
+                <button class="text-gray-400 hover:text-accent-cyan transition-colors" aria-label="Пошук">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </button>
+                <div class="h-6 w-px bg-white/10"></div>
+
+                {% if user.role == 'client' %}
+                <a href="{% url 'create_project' %}" class="bg-white/5 hover:bg-accent-blue/20 text-accent-blue border border-accent-blue/30 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_10px_rgba(0,112,243,0.2)] hover:shadow-[0_0_15px_rgba(0,112,243,0.4)] block">
+                    Створити Проєкт
+                </a>
+                {% else %}
+                <a href="{% url 'resume' %}" class="bg-white/5 hover:bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_10px_rgba(0,240,255,0.2)] hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] block text-center">
+                    Моє Резюме
+                </a>
+                {% endif %}
+
+            </div>
+        </header>
+
+        <div class="p-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+</body>
+</html>

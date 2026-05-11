@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DevSquad Connect - Оплата{% endblock %}
+{% block header_title %}Фінанси{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card { background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
+    .filter-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: white; transition: all 0.3s ease; }
+    .filter-input:focus { border-color: rgba(34, 197, 94, 0.5); box-shadow: 0 0 15px rgba(34, 197, 94, 0.15); outline: none; }
+</style>
+
+{% if messages %}
+<div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="p-4 rounded-xl text-sm font-medium {% if message.tags == 'error' %}bg-red-500/10 text-red-400 border border-red-500/20{% else %}bg-green-500/10 text-green-400 border border-green-500/20{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Розрахунки</h1>
+    <p class="text-gray-400 max-w-2xl text-sm">Оплачуйте активні проєкти. Ви можете змінити суму перед оплатою за домовленістю з виконавцем.</p>
+</div>
+<div class="glass-card rounded-2xl p-6 mb-8 flex items-center gap-6 border-l-4 border-blue-500">
+    <div class="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+    </div>
+    <div>
+        <p class="text-gray-400 text-sm font-bold uppercase tracking-wider">Заморожено в сейфі</p>
+        <p class="text-3xl font-mono font-bold text-white mt-1">
+            Активні транзакції
+        </p>
+        <p class="text-xs text-blue-400 mt-1">Ці кошти знаходяться під захистом платформи до завершення проєктів.</p>
+    </div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    {% for project in projects_in_progress %}
+    <div class="glass-card rounded-3xl p-8 relative overflow-hidden group">
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 {% if project.is_paid %}bg-green-500/10{% else %}bg-yellow-500/10{% endif %} rounded-full blur-3xl pointer-events-none transition-all duration-500"></div>
+
+        <div class="flex justify-between items-start mb-6 relative z-10">
+            <div>
+                <h3 class="font-bold text-2xl text-white">{{ project.title }}</h3>
+                <p class="text-sm text-gray-400 mt-1">Виконавець: <span class="text-white">{{ project.applications.first.developer.display_name|default:project.applications.first.developer.username }}</span></p>
+            </div>
+            {% if project.is_paid %}
+                <span class="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-[10px] font-bold uppercase tracking-wider">Оплачено</span>
+            {% else %}
+                <span class="px-3 py-1 bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 rounded-lg text-[10px] font-bold uppercase tracking-wider">Очікує оплати</span>
+            {% endif %}
+        </div>
+
+        <div class="bg-black/30 border border-white/5 rounded-xl p-5 mb-6 relative z-10">
+            <div class="flex justify-between items-center mb-2">
+                <p class="text-xs text-gray-500 font-bold uppercase">Заявлена ставка виконавця:</p>
+                <p class="text-sm text-white font-mono">${{ project.applications.first.proposed_rate|default:project.budget|default:"0" }}</p>
+            </div>
+            <div class="flex justify-between items-center">
+                <p class="text-xs text-gray-500 font-bold uppercase">Оцінка часу:</p>
+                <p class="text-sm text-white font-mono">{{ project.applications.first.estimated_hours|default:"~" }} год</p>
+            </div>
+        </div>
+
+        {% if not project.payment_status == 'paid' and not project.payment_status == 'frozen' %}
+            
+            {% if user.role == 'client' %}
+            <form action="{% url 'process_payment' project.id %}" method="POST" class="relative z-10 flex flex-col gap-4">
+                {% csrf_token %}
+                <div>
+                    <label class="text-xs text-gray-400 mb-1 block">Фінальна ціна до оплати ($)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                        <input type="number" name="final_price" required value="{{ project.applications.first.proposed_rate|default:project.budget }}" class="filter-input w-full pl-8 pr-4 py-3 rounded-xl font-mono text-lg font-bold text-white">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-white border border-green-500/30 transition-all font-bold shadow-[0_0_15px_rgba(34,197,94,0.2)]">
+                    Заморозити кошти
+                </button>
+            </form>
+            {% else %}
+            <div class="relative z-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-6 text-center">
+                <h4 class="text-yellow-500 font-bold mb-1">Очікування оплати клієнтом</h4>
+                <p class="text-xs text-gray-400">Гроші ще не переказані в сейф.</p>
+            </div>
+            {% endif %}
+
+        {% elif project.payment_status == 'frozen' %}
+            <div class="relative z-10 bg-blue-500/10 border border-blue-500/20 rounded-xl p-6 text-center">
+                <h4 class="text-blue-400 font-bold mb-1">Кошти Заморожено 🔒</h4>
+                <p class="text-sm text-gray-400">Фінальна сума: <span class="text-white font-mono font-bold">${{ project.final_price }}</span></p>
+                {% if user.role == 'developer' %}
+                    <p class="text-xs text-blue-400 mt-2">Ви можете підтвердити оплату на дошці "Робочий простір".</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="relative z-10 bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center">
+                <h4 class="text-green-400 font-bold mb-1">Оплачено ✅</h4>
+                <p class="text-sm text-gray-400">Фінальна сума: <span class="text-white font-mono font-bold">${{ project.final_price }}</span></p>
+            </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-16">
+        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Немає проєктів для оплати</h3>
+        <p class="text-gray-500 text-sm">Спочатку схваліть виконавця для вашого проєкту на дошці.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

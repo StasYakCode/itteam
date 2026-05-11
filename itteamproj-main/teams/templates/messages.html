@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DevSquad Connect - Повідомлення{% endblock %}
+{% block header_title %}Повідомлення{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card { background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
+    .chat-container { height: calc(100vh - 180px); }
+    .chat-scroll::-webkit-scrollbar { width: 4px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+    .msg-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.3s ease; color: white; }
+    .msg-input:focus { outline: none; background: rgba(255, 255, 255, 0.06); border-color: #00f0ff; }
+</style>
+
+<div class="glass-card rounded-[2rem] chat-container flex overflow-hidden border border-white/10">
+    <div class="w-1/3 border-r border-white/5 flex flex-col bg-black/20 z-10">
+        <div class="p-6 border-b border-white/5"><h3 class="text-white font-bold text-lg">Чати</h3></div>
+        <div class="overflow-y-auto flex-1 chat-scroll px-3 py-4 space-y-2">
+            {% for room in rooms %}
+            <a href="?room_id={{ room.id }}" class="block">
+                <div class="flex items-center gap-3 p-3 rounded-xl border transition-colors {% if active_room and active_room.id == room.id %}bg-accent-cyan/10 border-accent-cyan/30{% else %}border-transparent hover:bg-white/5{% endif %}">
+                    <img src="https://ui-avatars.com/api/?name={{ room.name|urlencode }}&background=111&color=fff" class="w-10 h-10 rounded-full">
+                    <div class="flex-1 overflow-hidden"><h4 class="text-white font-bold text-sm truncate">{{ room.name }}</h4></div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="flex-1 flex flex-col relative z-10">
+        {% if active_room %}
+        <div class="h-20 border-b border-white/5 flex items-center px-8 bg-black/10 shrink-0">
+            <h3 class="text-white font-bold">{{ active_room.name }}</h3>
+        </div>
+
+        <div class="flex-1 overflow-y-auto chat-scroll p-8 flex flex-col" id="chat-messages-container">
+            {% for msg in active_room.messages.all %}
+                <div class="flex flex-col {% if msg.sender == user %}items-end{% else %}items-start{% endif %} mb-6">
+                    <div class="px-5 py-3 rounded-2xl max-w-[70%] border {% if msg.sender == user %}bg-accent-cyan text-black border-accent-cyan/40{% else %}bg-[#111] text-gray-300 border-white/5{% endif %}">
+                        <span class="text-[10px] font-bold uppercase block mb-1 opacity-60">{{ msg.sender.display_name }}</span>
+                        <p class="text-sm">{{ msg.content }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="p-6 bg-black/20 border-t border-white/5 shrink-0">
+            <form id="realtime-chat-form" class="relative flex items-center gap-4">
+                {% csrf_token %}
+                <input type="text" id="msg-content" required class="msg-input flex-1 py-3 px-5 rounded-xl text-sm" placeholder="Напишіть повідомлення...">
+                <button type="submit" class="bg-accent-cyan p-3 rounded-xl text-black transition-transform hover:scale-105 active:scale-95">
+                    <svg class="w-5 h-5 transform rotate-90" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="flex-1 flex items-center justify-center text-gray-500">Оберіть чат для початку</div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // 1. КОНФІГУРАЦІЯ
+    const SUPABASE_URL = 'https://pjxiglxsyftbtfvlvatf.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_3pOdRBderSAVUATUA509iQ_hSbm8G1z'; // Вставте ваш Anon Key
+    const { createClient } = window.supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const roomId = "{{ active_room.id }}";
+    const userId = "{{ user.id }}";
+    const container = document.getElementById('chat-messages-container');
+
+    // Створюємо "словник" імен учасників прямо з Django
+    const participants = {
+        {% for member in active_room.participants.all %}
+            "{{ member.id }}": "{{ member.display_name|default:member.username }}",
+        {% endfor %}
+    };
+
+    function scrollDown() { 
+        if(container) container.scrollTop = container.scrollHeight; 
+    }
+    scrollDown();
+
+    // 2. ПІДПИСКА НА REALTIME (INSERT)
+    if (roomId && roomId !== "None") {
+        supabaseClient
+            .channel(`room-${roomId}`)
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'teams_message' 
+            }, (payload) => {
+                const msg = payload.new;
+                
+                // Додаємо на екран, ТІЛЬКИ якщо повідомлення від іншого юзера
+                // (своє ми додаємо миттєво через AJAX нижче)
+                if (msg.room_id === roomId && String(msg.sender_id) !== String(userId)) {
+                    const senderName = participants[msg.sender_id] || "Учасник";
+                    appendMessage(msg.content, 'left', senderName);
+                }
+            })
+            .subscribe();
+    }
+
+    // 3. AJAX ВІДПРАВКА (БЕЗ ОНОВЛЕННЯ)
+    const chatForm = document.getElementById('realtime-chat-form');
+    if (chatForm) {
+        chatForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('msg-content');
+            const content = input.value.trim();
+            if (!content) return;
+            
+            // Одразу малюємо своє повідомлення ("Ви")
+            appendMessage(content, 'right', 'Ви');
+            input.value = '';
+
+            const formData = new FormData();
+            formData.append('content', content);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            try {
+                // Відправляємо на Django View, який просто запише в БД
+                // fetch не перезавантажує сторінку!
+                const response = await fetch("{% url 'send_message' active_room.id %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                
+                if (!response.ok) throw new Error("Сервер не зміг зберегти повідомлення");
+                
+            } catch (err) {
+                console.error("Помилка відправки:", err);
+                alert("Помилка при відправці повідомлення.");
+            }
+        };
+    }
+
+    // 4. ФУНКЦІЯ ВІДМАЛЬОВКИ
+    function appendMessage(content, side, name) {
+        if(!container) return;
+        const div = document.createElement('div');
+        div.className = `flex flex-col ${side === 'right' ? 'items-end' : 'items-start'} mb-6 anim-fade-in`;
+        
+        const bgColor = side === 'right' ? 'bg-accent-cyan text-black border-accent-cyan/40' : 'bg-[#111] text-gray-300 border-white/5';
+        const labelColor = side === 'right' ? 'text-black/60' : 'text-gray-500';
+
+        div.innerHTML = `
+            <div class="px-5 py-3 rounded-2xl max-w-[70%] border ${bgColor}">
+                <span class="text-[10px] font-bold uppercase block mb-1 ${labelColor}">${name}</span>
+                <p class="text-sm">${content}</p>
+            </div>
+        `;
+        container.appendChild(div);
+        scrollDown();
+    }
+</script>
+
+<style>
+    .anim-fade-in { animation: fadeIn 0.3s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+{% endblock %}
